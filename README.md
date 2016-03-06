@@ -1,2 +1,2 @@
 # SAS Learning Notes
-# All classwork notes included, learn SAS code from basic
+# All classwork notes included, learn SAS from basic
