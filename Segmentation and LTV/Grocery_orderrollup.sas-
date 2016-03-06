@@ -1,0 +1,81 @@
+libname gro '/sscc/datasets/imc486/Cahill/grocery';
+
+proc sort data=gro.ordprod out=orderprod;
+by pod_id;
+run;
+
+proc sort data=gro.lookup(keep=pod_id minor_cat) out=lookup1;
+by pod_id;
+run;
+
+
+data prod_detail;
+merge orderprod(in=a) lookup1(in=b);/*only those values are not missing*/
+by pod_id;
+
+if a ;
+item_tot=it_qy*it_pr_qy;
+run;
+
+proc sort data=prod_detail out=order_detail;
+by ord_id;
+run;
+
+data order_level;
+set order_detail;
+by ord_id;
+
+retain order_amt baby_orders baby_amt deli_order deli_amt dairy_order dairy_amt;
+
+if first.ord_id then do;
+order_amt=0;
+baby_order=0;
+baby_amt=0;
+deli_order=0;
+deli_amt=0;
+dairy_order=0;
+dairy_amt=0;
+end;
+
+if item_tot=. then item_tot=0;
+order_amt=order_amt+item_tot;
+if index(minor_cat, 'BABY') gt 0 then do;
+baby_order=1;
+baby_amt=baby_amt+item_tot;
+end;
+
+if index(minor_cat, 'DAIRY') gt 0 then do;
+dairy_order=1;
+dairy_amt=dairy_amt+item_tot;
+end;
+
+if index(minor_cat, 'DELI ') gt 0 then do; 
+deli_order=1;
+deli_amt=deli_amt+item_tot;
+end;
+
+if last.ord_id then output;
+run;
+
+proc sort data=gro.order out=ord_date;
+by ord_id;
+run;
+
+data order_level;
+merge order_level(in=a) ord_date(in=b);
+by ord_id;
+
+if a and b;
+run;
+
+proc means data=order_level;
+run;
+
+proc print data=order_level(obs=20);
+run;
+
+
+
+
+
+
